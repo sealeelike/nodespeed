@@ -4,7 +4,9 @@
 # It installs deps, drops the agent binary + systemd unit, walks you through
 # node-id / port / SSL, generates the HMAC secret, starts the service, self-tests,
 # and prints the config line to paste into central. Afterwards manage with `nsp`.
-set -uo pipefail
+# NOTE: no `set -u` — on a fresh install the NODESPEED_* config vars are unset
+# until we write them, and -u would abort on the first `${NODESPEED_LISTEN...}`.
+set -o pipefail
 
 NS_REPO="${NS_REPO:-sealeelike/nodespeed}"
 NS_BRANCH="${NS_BRANCH:-main}"
@@ -50,15 +52,16 @@ detect_arch() {
 
 install_deps() {
 	local fam; fam="$(pkg_family)"
-	LOGI "安装依赖 (curl tar socat openssl ca-certificates cron) ..."
+	LOGI "安装依赖 (curl tar socat openssl ca-certificates cron),首次可能要十几秒,输出如下 ..."
 	case "$fam" in
-		apt)    export DEBIAN_FRONTEND=noninteractive; apt-get update -q >/dev/null; apt-get install -y -q curl tar socat openssl ca-certificates cron >/dev/null ;;
-		dnf)    dnf install -y -q curl tar socat openssl ca-certificates cronie >/dev/null ;;
-		yum)    yum install -y curl tar socat openssl ca-certificates cronie >/dev/null ;;
-		pacman) pacman -Sy --noconfirm --needed curl tar socat openssl ca-certificates cronie >/dev/null ;;
-		apk)    apk add --no-cache curl tar socat openssl ca-certificates dcron >/dev/null ;;
+		apt)    export DEBIAN_FRONTEND=noninteractive; apt-get update -q && apt-get install -y -q curl tar socat openssl ca-certificates cron ;;
+		dnf)    dnf install -y curl tar socat openssl ca-certificates cronie ;;
+		yum)    yum install -y curl tar socat openssl ca-certificates cronie ;;
+		pacman) pacman -Sy --noconfirm --needed curl tar socat openssl ca-certificates cronie ;;
+		apk)    apk add --no-cache curl tar socat openssl ca-certificates dcron ;;
 		*)      LOGW "未知发行版,请自行确保已装:curl tar socat openssl" ;;
 	esac
+	LOGI "依赖就绪。"
 }
 
 # --- agent binary: local override / repo build first, else GitHub release -----

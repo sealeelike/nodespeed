@@ -62,12 +62,13 @@ Central API: `GET /api/nodes` (secrets stripped), `GET /api/token?node=ID`, `POS
 cd node-agent && go test ./... && \
   CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o node-agent .
 
-# central
-cd central && go test ./... && go build -o central .
+# central — the frontend is embedded via go:embed from central/webroot/, so build
+# the frontend and copy it in first for a self-contained binary:
+cd frontend && npm run build && rm -rf ../central/webroot/* && cp -r dist/* ../central/webroot/
+cd central && go test ./... && go build -o central .   # binary now serves the SPA itself
 
-# frontend
-cd frontend && npm run dev      # Vite dev server on :5173
-cd frontend && npm run build    # tsc -b && vite build → dist/ (embed into central via -static)
+# frontend (dev)
+cd frontend && npm run dev      # Vite dev server on :5173, proxies /api to :8090
 cd frontend && npm run lint     # oxlint
 ```
 

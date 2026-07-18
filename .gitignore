@@ -10,6 +10,10 @@
 # ---- Node / frontend ----
 node_modules/
 /frontend/dist/
+# frontend built into central via go:embed (copied from frontend/dist at build);
+# keep only the placeholder so the embed pattern still matches
+/central/webroot/*
+!/central/webroot/.gitkeep
 .vite/
 *.local
 

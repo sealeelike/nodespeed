@@ -13,10 +13,12 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
+	"path"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -28,7 +30,8 @@ type server struct {
 	cfgPath  string                 // re-read by /api/reload
 	cityDB   *maxminddb.Reader      // opened once, reused across reloads (may be nil)
 	tokenTTL time.Duration
-	staticFS string
+	web      fs.FS        // frontend files: embedded, or -static dir override
+	fileSrv  http.Handler // static file server over web
 }
 
 func (s *server) writeJSON(w http.ResponseWriter, code int, v any) {
@@ -80,21 +83,26 @@ func (s *server) handleReload(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, map[string]any{"ok": true, "count": len(cfg.Nodes), "nodes": cfg.publicNodes()})
 }
 
-// serveStatic serves the SPA: real files if present, else index.html fallback,
-// else a built-in placeholder so central runs before the frontend is built.
+// serveStatic serves the SPA from s.web (embedded frontend, or the -static
+// override): the real file when it exists, else index.html (so client-side
+// routes like /nodes and /test resolve), else a built-in placeholder when the
+// frontend hasn't been built in yet.
 func (s *server) serveStatic(w http.ResponseWriter, r *http.Request) {
-	if s.staticFS == "" {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = w.Write([]byte(placeholderHTML))
-		return
+	if s.web != nil {
+		if p := strings.TrimPrefix(path.Clean(r.URL.Path), "/"); p != "" {
+			if fi, err := fs.Stat(s.web, p); err == nil && !fi.IsDir() {
+				s.fileSrv.ServeHTTP(w, r)
+				return
+			}
+		}
+		if b, err := fs.ReadFile(s.web, "index.html"); err == nil {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			_, _ = w.Write(b)
+			return
+		}
 	}
-	clean := filepath.Clean(r.URL.Path)
-	p := filepath.Join(s.staticFS, clean)
-	if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
-		http.ServeFile(w, r, p)
-		return
-	}
-	http.ServeFile(w, r, filepath.Join(s.staticFS, "index.html"))
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(placeholderHTML))
 }
 
 const placeholderHTML = `<!doctype html><meta charset=utf-8>
@@ -109,7 +117,7 @@ func main() {
 	var (
 		addr      = flag.String("listen", envOr("NODESPEED_LISTEN", ":8080"), "listen address")
 		cfgPath   = flag.String("config", envOr("NODESPEED_CONFIG", "nodes.json"), "node config JSON")
-		staticDir = flag.String("static", os.Getenv("NODESPEED_STATIC"), "static frontend dir (empty = built-in placeholder)")
+		staticDir = flag.String("static", os.Getenv("NODESPEED_STATIC"), "static frontend dir override (empty = use embedded frontend)")
 		geoipCity = flag.String("geoip-city", os.Getenv("NODESPEED_GEOIP_CITY"), "path to GeoIP City mmdb (optional; auto-fills node lat/lon/name/region)")
 		ttl       = flag.Int("token-ttl", 120, "token lifetime in seconds")
 	)
@@ -125,7 +133,18 @@ func main() {
 	}
 	geoFill(cfg, cityDB)
 
-	s := &server{cfgPath: *cfgPath, cityDB: cityDB, tokenTTL: time.Duration(*ttl) * time.Second, staticFS: *staticDir}
+	// Frontend source: -static dir override (dev convenience) or the embedded
+	// build. Either way serveStatic falls back to a placeholder if index.html
+	// is missing (e.g. embedded webroot holds only .gitkeep).
+	web := embeddedWebFS()
+	webSrc := "embedded"
+	if *staticDir != "" {
+		web = os.DirFS(*staticDir)
+		webSrc = *staticDir
+	}
+
+	s := &server{cfgPath: *cfgPath, cityDB: cityDB, tokenTTL: time.Duration(*ttl) * time.Second, web: web}
+	s.fileSrv = http.FileServerFS(web)
 	s.cfg.Store(cfg)
 
 	mux := http.NewServeMux()
@@ -134,8 +153,8 @@ func main() {
 	mux.HandleFunc("/api/reload", s.handleReload)
 	mux.HandleFunc("/", s.serveStatic)
 
-	log.Printf("central listening on %s (%d nodes, token-ttl=%ds, static=%q, geoip=%v)",
-		*addr, len(cfg.Nodes), *ttl, *staticDir, cityDB != nil)
+	log.Printf("central listening on %s (%d nodes, token-ttl=%ds, frontend=%s, geoip=%v)",
+		*addr, len(cfg.Nodes), *ttl, webSrc, cityDB != nil)
 	log.Fatal(http.ListenAndServe(*addr, mux))
 }
 

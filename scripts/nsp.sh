@@ -2,7 +2,8 @@
 # nsp — NodeSpeed node management menu (installed to /usr/bin/nsp).
 # Manages the node-agent's port, SSL config, and shows the config to paste into
 # central. No version/update feature by design.
-set -uo pipefail
+# No `set -u`: config vars may be unset before first load; -u would abort banners.
+set -o pipefail
 
 # Load the shared lib (installed by install.sh; fall back to repo copy for dev).
 if [ -r /usr/local/lib/nodespeed/nodespeed-lib.sh ]; then
