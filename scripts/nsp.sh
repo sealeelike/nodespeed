@@ -51,6 +51,7 @@ change_port() {
 	read -rp "新的测速端口 [${NODESPEED_LISTEN##*:}]: " port
 	port="${port:-${NODESPEED_LISTEN##*:}}"
 	[[ "$port" =~ ^[0-9]+$ ]] && [ "$port" -ge 1 ] && [ "$port" -le 65535 ] || { LOGE "端口无效"; return; }
+	ns_port_blocked "$port" && { LOGE "端口 $port 被浏览器判为不安全端口(net::ERR_UNSAFE_PORT),面板连不上,换一个。"; return; }
 	if [ ":$port" != "$NODESPEED_LISTEN" ] && ns_port_used "$port"; then
 		LOGW "端口 $port 已被占用。"; confirm "仍然使用?" || return
 	fi

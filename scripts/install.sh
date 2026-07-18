@@ -124,6 +124,7 @@ main() {
 		read -rp "测速服务端口 [${NODESPEED_LISTEN##*:}]: " port
 		port="${port:-${NODESPEED_LISTEN##*:}}"; port="${port:-8443}"
 		[[ "$port" =~ ^[0-9]+$ ]] && [ "$port" -ge 1 ] && [ "$port" -le 65535 ] || { LOGE "端口无效"; continue; }
+		ns_port_blocked "$port" && { LOGE "端口 $port 被浏览器判为不安全端口(net::ERR_UNSAFE_PORT),面板将连不上它。换一个(推荐 8443,或其它 >1024 的常规端口)。"; continue; }
 		ns_port_used "$port" && { LOGW "端口 $port 已被占用,换一个。"; continue; }
 		break
 	done
