@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react'
 // user's explicit choice in localStorage. Applies `.dark` on <html>.
 export function useDarkMode(): [boolean, () => void] {
   const [dark, setDark] = useState<boolean>(() => {
-    const saved = localStorage.getItem('nqp-theme')
+    const saved = localStorage.getItem('nodespeed-theme')
     if (saved) return saved === 'dark'
     return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
   })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('nqp-theme', dark ? 'dark' : 'light')
+    localStorage.setItem('nodespeed-theme', dark ? 'dark' : 'light')
   }, [dark])
 
   return [dark, () => setDark((d) => !d)]

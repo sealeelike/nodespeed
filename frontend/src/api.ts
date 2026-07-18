@@ -7,6 +7,12 @@ export async function fetchNodes(): Promise<PublicNode[]> {
   return j.nodes ?? []
 }
 
+// hot-reload the central's node config from disk (re-reads file + GeoIP fill)
+export async function reloadNodes(): Promise<void> {
+  const r = await fetch('/api/reload', { method: 'POST' })
+  if (!r.ok) throw new Error(`/api/reload ${r.status}`)
+}
+
 export async function fetchToken(nodeId: string): Promise<TokenResp> {
   const r = await fetch(`/api/token?node=${encodeURIComponent(nodeId)}`)
   if (!r.ok) throw new Error(`/api/token ${r.status}`)

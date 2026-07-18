@@ -37,6 +37,8 @@ export function MapView({
   clientLat,
   clientLon,
   dark = false,
+  selectedId,
+  otherNodes,
 }: {
   lat: number
   lon: number
@@ -44,6 +46,8 @@ export function MapView({
   clientLat?: number
   clientLon?: number
   dark?: boolean
+  selectedId?: string
+  otherNodes?: { id: string; lat: number; lon: number; name: string }[]
 }) {
   const elRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -71,6 +75,34 @@ export function MapView({
       map.getContainer()
         .querySelector('.maplibregl-ctrl-attrib')
         ?.classList.remove('maplibregl-compact-show')
+
+      // small dots for every OTHER configured node (skip the tested one + no-geo),
+      // longitude-unwrapped to the same anchor as the arc so far-side dots land right
+      const anchorLon = client[0]
+      const feats = (otherNodes ?? [])
+        .filter((o) => o.id !== selectedId)
+        .filter((o) => o.lat !== 0 || o.lon !== 0)
+        .map((o) => ({
+          type: 'Feature' as const,
+          properties: { name: o.name },
+          geometry: { type: 'Point' as const, coordinates: [unwrapLon(anchorLon, o.lon), o.lat] },
+        }))
+      map.addSource('othernodes', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: feats },
+      })
+      map.addLayer({
+        id: 'othernodes',
+        type: 'circle',
+        source: 'othernodes',
+        paint: {
+          'circle-radius': 3,
+          'circle-color': dark ? '#9ca3af' : '#6b7280',
+          'circle-opacity': 0.7,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': dark ? '#111827' : '#ffffff',
+        },
+      })
     })
 
     // node marker (red pin)
@@ -103,7 +135,7 @@ export function MapView({
       map.remove()
       mapRef.current = null
     }
-  }, [lat, lon, label, clientLat, clientLon, dark])
+  }, [lat, lon, label, clientLat, clientLon, dark, selectedId, otherNodes])
 
   return <div ref={elRef} className="h-64 w-full overflow-hidden" />
 }

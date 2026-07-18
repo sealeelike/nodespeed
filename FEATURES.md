@@ -1,4 +1,4 @@
-# NetQualityPanel 功能清单（权威）
+# NodeSpeed 功能清单（权威）
 
 > 页面从上到下、一个 block 一个二级标题；block 内组件/功能往下拆。
 > 标签：`[引擎]` = `@cloudflare/speedtest` 直接给数据；`[自建]` = 需自己做；`[v1]` = 一期做；`[后期]` = 二/三期。

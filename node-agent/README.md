@@ -1,6 +1,6 @@
 # node-agent
 
-NetQualityPanel 的节点侧测量 agent。被动服务、不回连、不上报。浏览器直连它测速(client → node)。
+NodeSpeed 的节点侧测量 agent。被动服务、不回连、不上报。浏览器直连它测速(client → node)。
 
 ## 端点(均需有效 HMAC 令牌 `?token=<exp>.<sigHex>`)
 
@@ -17,12 +17,12 @@ NetQualityPanel 的节点侧测量 agent。被动服务、不回连、不上报�
 
 | flag | env | 默认 | 说明 |
 |---|---|---|---|
-| `-node-id` | `NQP_NODE_ID` | `node` | 节点标识(仅日志) |
-| `-secret` | `NQP_SECRET` | — | 预共享 HMAC secret(**必填**) |
-| `-listen` | `NQP_LISTEN` | `:8443` | 监听地址 |
-| `-tls-mode` | `NQP_TLS_MODE` | `http` | `http` / `cert` / `selfsign` |
-| `-cert` `-key` | `NQP_CERT` `NQP_KEY` | — | 证书路径(`tls-mode=cert`) |
-| `-allow-origin` | `NQP_ALLOW_ORIGIN` | `*` | CORS 允许来源 |
+| `-node-id` | `NODESPEED_NODE_ID` | `node` | 节点标识(仅日志) |
+| `-secret` | `NODESPEED_SECRET` | — | 预共享 HMAC secret(**必填**) |
+| `-listen` | `NODESPEED_LISTEN` | `:8443` | 监听地址 |
+| `-tls-mode` | `NODESPEED_TLS_MODE` | `http` | `http` / `cert` / `selfsign` |
+| `-cert` `-key` | `NODESPEED_CERT` `NODESPEED_KEY` | — | 证书路径(`tls-mode=cert`) |
+| `-allow-origin` | `NODESPEED_ALLOW_ORIGIN` | `*` | CORS 允许来源 |
 
 TLS 模式:`http`(明文调试)、`cert`(本机证书路径)、`selfsign`(裸 IP 自签,浏览器需手动信任)。
 域名 ACME 由部署脚本层用 acme.sh 处理,证书落地后以 `cert` 模式加载。
@@ -37,7 +37,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o node-agent .
 ## 运行(systemd 示例)
 
 ```sh
-systemd-run --unit=nqp-agent --setenv=NQP_SECRET=xxxx \
+systemd-run --unit=nodespeed-agent --setenv=NODESPEED_SECRET=xxxx \
   /usr/local/bin/node-agent -node-id hk1 -listen :8443 -tls-mode cert \
   -cert /path/fullchain.pem -key /path/privkey.pem
 ```

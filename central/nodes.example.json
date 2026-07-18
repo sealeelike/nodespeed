@@ -1,13 +1,21 @@
 {
   "nodes": [
     {
-      "id": "hk1",
-      "name": "Hong Kong 1",
-      "url": "https://andhk.sealee.dpdns.org:8443",
-      "region": "Hong Kong",
-      "lat": 22.3193,
-      "lon": 114.1694,
-      "secret": "REPLACE_WITH_SECRET_PRINTED_BY_DEPLOY_SCRIPT"
+      "ip": "203.0.113.10",
+      "port": 8443,
+      "secret": "REPLACE_WITH_PER_NODE_SECRET"
+    },
+    {
+      "id": "tokyo1",
+      "ip": "198.51.100.20",
+      "port": 8443,
+      "host": "tokyo.example.com",
+      "scheme": "https",
+      "secret": "REPLACE_WITH_PER_NODE_SECRET",
+      "name": "Tokyo 1",
+      "region": "Tokyo",
+      "lat": 35.6762,
+      "lon": 139.6503
     }
   ]
 }

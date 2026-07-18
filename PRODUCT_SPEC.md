@@ -1,4 +1,4 @@
-# NetQualityPanel — 产品期望规格
+# NodeSpeed — 产品期望规格
 
 > 自建的「链路质量画像」面板：像 speed.cloudflare.com 那样出上下行曲线、加载延迟、抖动、
 > bufferbloat 和场景化评级（游戏/视频/RTC），但测量对端是**你自己的 VPS 节点**，而不是 CF 边缘。

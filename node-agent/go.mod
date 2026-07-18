@@ -1,4 +1,4 @@
-module github.com/sealee/netqualitypanel/node-agent
+module github.com/sealeelike/nodespeed/node-agent
 
 go 1.26.5
 

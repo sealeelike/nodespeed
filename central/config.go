@@ -6,16 +6,24 @@ import (
 	"os"
 )
 
-// Node is one manually-configured backend node. The secret NEVER leaves the
-// central (it's stripped from the public /api/nodes response).
+// Node is one manually-configured backend node. Operators only need to supply
+// ip / port / secret; name / region / lat / lon are auto-filled from the node's
+// IP via the embedded GeoIP City DB (see geoip.go) unless explicitly overridden.
+// The secret NEVER leaves the central (stripped from /api/nodes).
 type Node struct {
-	ID     string  `json:"id"`
-	Name   string  `json:"name"`
-	URL    string  `json:"url"`    // base URL of the node agent, e.g. https://hk1.example.com:8443
-	Region string  `json:"region"` // human label, e.g. "Hong Kong"
-	Lat    float64 `json:"lat"`
-	Lon    float64 `json:"lon"`
-	Secret string  `json:"secret"` // pre-shared HMAC secret (kept server-side only)
+	// --- input (JSON) ---
+	IP     string  `json:"ip"`               // REQUIRED — public IP (GeoIP lookup + default URL host)
+	Port   int     `json:"port"`             // REQUIRED
+	Secret string  `json:"secret"`           // REQUIRED — pre-shared HMAC secret (server-side only)
+	Scheme string  `json:"scheme,omitempty"` // optional — default "https"
+	Host   string  `json:"host,omitempty"`   // optional cert hostname for the URL — default = ip
+	ID     string  `json:"id,omitempty"`     // optional — default "<ip>:<port>"
+	Name   string  `json:"name,omitempty"`   // optional override — else GeoIP city
+	Region string  `json:"region,omitempty"` // optional override — else GeoIP city/country
+	Lat    float64 `json:"lat,omitempty"`    // optional override — else GeoIP
+	Lon    float64 `json:"lon,omitempty"`    // optional override — else GeoIP
+	// --- derived at load ---
+	URL string `json:"-"` // built from scheme/host/port, e.g. https://hk1.example.com:8443
 }
 
 // PublicNode is what the frontend sees — no secret.
@@ -42,20 +50,33 @@ func loadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
 	seen := map[string]bool{}
-	for i, n := range c.Nodes {
+	// iterate by index so derived fields (URL, ID) persist back into the slice
+	for i := range c.Nodes {
+		n := &c.Nodes[i]
+		if n.IP == "" {
+			return nil, fmt.Errorf("node[%d] missing ip", i)
+		}
+		if n.Port == 0 {
+			return nil, fmt.Errorf("node %q missing port", n.IP)
+		}
+		if n.Secret == "" {
+			return nil, fmt.Errorf("node %q missing secret", n.IP)
+		}
+		if n.Scheme == "" {
+			n.Scheme = "https"
+		}
+		host := n.Host
+		if host == "" {
+			host = n.IP
+		}
+		n.URL = fmt.Sprintf("%s://%s:%d", n.Scheme, host, n.Port)
 		if n.ID == "" {
-			return nil, fmt.Errorf("node[%d] missing id", i)
+			n.ID = fmt.Sprintf("%s:%d", n.IP, n.Port)
 		}
 		if seen[n.ID] {
 			return nil, fmt.Errorf("duplicate node id %q", n.ID)
 		}
 		seen[n.ID] = true
-		if n.Secret == "" {
-			return nil, fmt.Errorf("node %q missing secret", n.ID)
-		}
-		if n.URL == "" {
-			return nil, fmt.Errorf("node %q missing url", n.ID)
-		}
 	}
 	return &c, nil
 }

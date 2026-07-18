@@ -1,4 +1,4 @@
-# NetQualityPanel 构建顺序（ROADMAP）
+# NodeSpeed 构建顺序（ROADMAP）
 
 > 原则：**先验证最大假设 → 打通最细端到端竖切 → 再加厚 → 最后抛光**。
 > 核心赌注：CF 引擎 `@cloudflare/speedtest` 指向自建端点能跑出正确曲线 + AIM。未验证前，UI/鉴权/部署都是空中楼阁。
@@ -56,10 +56,10 @@
   - `node-agent/`:/__ack /__down /__up,HMAC 令牌门禁(过期/伪造 403)、TLS 多模式(cert/selfsign/http)、Server-Timing。真域名证书 8443 验证。
   - `central/`:无登录;`GET /api/nodes`(剔 secret)、`GET /api/token?node=`(签令牌)、发静态前端。令牌算法与 agent 一致。
   - `frontend/`:Vite+React+Tailwind;节点表+连通性(ack)、三列(下行橙/上行紫大数字+uPlot 实时曲线+加载延迟)、AIM 三评级。
-  - 分支 `feat/phase1-vertical-slice`,4 个提交。测试机上 `nqp-agent`(systemd transient)跑在 :8443。
+  - 分支 `feat/phase1-vertical-slice`,4 个提交。测试机上 `nodespeed-agent`(systemd transient)跑在 :8443。
 - **阶段 2 前端保真度 完成并验证通过 ✅**(2026-07-18,已合 main)。
   - 箱线图(BoxPlot.tsx,粗条/中位/均值/须/散点)复用于 A4 延迟三卡 + A6/A7 分档下载上传;展开出统计气泡 + 逐次明细表(#/Duration/Speed)。
   - A3:MapLibre + CARTO Positron/Dark 灰度地图(免 key)+ 节点图钉;连接信息(Your IP + AS/ISP,来自节点新增 `/__meta` + 内置 DB-IP ASN mmdb)。
   - 控制条(Retest + Measured at)、header/footer、A10 深色模式(class 版 + 持久化 + 地图同步换肤)。全部浏览器验证。
 - **下一步**:进入**阶段 3**(部署工程化 → 可用 MVP)——一键交互脚本(问子域名/节点名/地区/TLS 模式,内置 acme.sh 申请模块,生成 secret,装正式 systemd unit)、中心 Docker 化(Go 二进制 + 内嵌前端 dist,单容器)、跑通 10+ 节点。
-  - 收尾项(小):`nqp-agent` 现在是 transient unit,阶段 3 落成正式 unit 文件;GeoIP mmdb 随脚本下载/续期。
+  - 收尾项(小):`nodespeed-agent` 现在是 transient unit,阶段 3 落成正式 unit 文件;GeoIP mmdb 随脚本下载/续期。

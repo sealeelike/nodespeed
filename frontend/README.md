@@ -1,6 +1,6 @@
 # frontend
 
-NetQualityPanel 前端(Vite + React + TS + Tailwind v4)。阶段 1:节点列表 + 连通性 + 测速三列 + AIM 评级。
+NodeSpeed 前端(Vite + React + TS + Tailwind v4)。阶段 1:节点列表 + 连通性 + 测速三列 + AIM 评级。
 
 ## 数据流
 

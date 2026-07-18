@@ -1,4 +1,4 @@
-// NetQualityPanel node agent.
+// NodeSpeed node agent.
 //
 // A passive, long-running measurement endpoint that the browser hits directly
 // (client -> node), driven by @cloudflare/speedtest. It does NOT call home and
@@ -56,15 +56,15 @@ func envOr(key, def string) string {
 
 func loadConfig() config {
 	c := config{}
-	flag.StringVar(&c.nodeID, "node-id", envOr("NQP_NODE_ID", "node"), "node identifier (for logs)")
-	flag.StringVar(&c.secret, "secret", os.Getenv("NQP_SECRET"), "pre-shared HMAC secret (or env NQP_SECRET)")
-	flag.StringVar(&c.listen, "listen", envOr("NQP_LISTEN", ":8443"), "listen address")
-	flag.StringVar(&c.tlsMode, "tls-mode", envOr("NQP_TLS_MODE", "http"), "http | cert | selfsign")
-	flag.StringVar(&c.certPath, "cert", os.Getenv("NQP_CERT"), "TLS cert path (tls-mode=cert)")
-	flag.StringVar(&c.keyPath, "key", os.Getenv("NQP_KEY"), "TLS key path (tls-mode=cert)")
-	flag.StringVar(&c.allowOrigin, "allow-origin", envOr("NQP_ALLOW_ORIGIN", "*"), "Access-Control-Allow-Origin value")
-	flag.StringVar(&c.geoipASN, "geoip-asn", os.Getenv("NQP_GEOIP_ASN"), "path to GeoIP ASN mmdb (optional, for /__meta ISP/AS)")
-	flag.StringVar(&c.geoipCity, "geoip-city", os.Getenv("NQP_GEOIP_CITY"), "path to GeoIP City mmdb (optional, for /__meta lat/lon/city)")
+	flag.StringVar(&c.nodeID, "node-id", envOr("NODESPEED_NODE_ID", "node"), "node identifier (for logs)")
+	flag.StringVar(&c.secret, "secret", os.Getenv("NODESPEED_SECRET"), "pre-shared HMAC secret (or env NODESPEED_SECRET)")
+	flag.StringVar(&c.listen, "listen", envOr("NODESPEED_LISTEN", ":8443"), "listen address")
+	flag.StringVar(&c.tlsMode, "tls-mode", envOr("NODESPEED_TLS_MODE", "http"), "http | cert | selfsign")
+	flag.StringVar(&c.certPath, "cert", os.Getenv("NODESPEED_CERT"), "TLS cert path (tls-mode=cert)")
+	flag.StringVar(&c.keyPath, "key", os.Getenv("NODESPEED_KEY"), "TLS key path (tls-mode=cert)")
+	flag.StringVar(&c.allowOrigin, "allow-origin", envOr("NODESPEED_ALLOW_ORIGIN", "*"), "Access-Control-Allow-Origin value")
+	flag.StringVar(&c.geoipASN, "geoip-asn", os.Getenv("NODESPEED_GEOIP_ASN"), "path to GeoIP ASN mmdb (optional, for /__meta ISP/AS)")
+	flag.StringVar(&c.geoipCity, "geoip-city", os.Getenv("NODESPEED_GEOIP_CITY"), "path to GeoIP City mmdb (optional, for /__meta lat/lon/city)")
 	flag.Parse()
 	return c
 }
@@ -178,7 +178,7 @@ func (a *agent) routes() *http.ServeMux {
 func main() {
 	cfg := loadConfig()
 	if cfg.secret == "" {
-		log.Fatal("no secret set (use -secret or env NQP_SECRET)")
+		log.Fatal("no secret set (use -secret or env NODESPEED_SECRET)")
 	}
 	a := &agent{cfg: cfg}
 	if db, err := openMMDB(cfg.geoipASN); err != nil {
@@ -227,7 +227,7 @@ func selfSignedCert(listen string) (tls.Certificate, error) {
 	}
 	tmpl := x509.Certificate{
 		SerialNumber: big.NewInt(1),
-		Subject:      pkix.Name{CommonName: "netqualitypanel-node"},
+		Subject:      pkix.Name{CommonName: "nodespeed-node"},
 		NotBefore:    time.Now().Add(-time.Hour),
 		NotAfter:     time.Now().AddDate(10, 0, 0),
 		KeyUsage:     x509.KeyUsageDigitalSignature,
