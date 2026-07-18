@@ -8,7 +8,7 @@ import type { BandwidthPoint } from '@cloudflare/speedtest'
 export function LiveChart({
   points,
   color,
-  height = 90,
+  height = 110,
 }: {
   points: BandwidthPoint[]
   color: string
@@ -22,6 +22,15 @@ export function LiveChart({
   const xs = points.map((p) => (new Date(p.measTime).getTime() - t0) / 1000)
   const ys = points.map((p) => p.bps / 1e6)
 
+  // 90th-percentile reference line (CF shows this on its speed curves)
+  const p90 = (() => {
+    if (ys.length < 2) return null
+    const s = [...ys].sort((a, b) => a - b)
+    return s[Math.min(s.length - 1, Math.floor(0.9 * (s.length - 1)))]
+  })()
+  const p90Ref = useRef<number | null>(p90)
+  p90Ref.current = p90
+
   useEffect(() => {
     if (!elRef.current) return
     const opts: uPlot.Options = {
@@ -30,10 +39,36 @@ export function LiveChart({
       cursor: { show: false },
       legend: { show: false },
       scales: { x: { time: false } },
+      hooks: {
+        draw: [
+          (u) => {
+            const v = p90Ref.current
+            if (v == null) return
+            const y = Math.round(u.valToPos(v, 'y', true)) + 0.5
+            const { left, width } = u.bbox
+            const ctx = u.ctx
+            ctx.save()
+            ctx.strokeStyle = '#9ca3af'
+            ctx.lineWidth = 1
+            ctx.setLineDash([3, 3])
+            ctx.beginPath()
+            ctx.moveTo(left, y)
+            ctx.lineTo(left + width, y)
+            ctx.stroke()
+            ctx.setLineDash([])
+            ctx.fillStyle = '#9ca3af'
+            ctx.font = '10px system-ui'
+            ctx.textBaseline = 'bottom'
+            ctx.fillText('90th percentile', left + 4, y - 2)
+            ctx.restore()
+          },
+        ],
+      },
+      // no visible axes — clean full-bleed sparkline like CF (y-scale still
+      // drives valToPos for the 90th-percentile reference line)
       axes: [
         { show: false },
-        { size: 34, grid: { show: true, stroke: '#eee' }, ticks: { show: false },
-          font: '10px system-ui', stroke: '#999' },
+        { show: false },
       ],
       series: [
         {},
@@ -47,10 +82,15 @@ export function LiveChart({
     }
     const plot = new uPlot(opts, [xs, ys], elRef.current)
     plotRef.current = plot
-    const onResize = () => plot.setSize({ width: elRef.current!.clientWidth, height })
-    window.addEventListener('resize', onResize)
+    // track the container's own width (grid columns reflow without a window
+    // resize) so the canvas never overflows and forces horizontal scroll
+    const ro = new ResizeObserver(() => {
+      const width = elRef.current?.clientWidth
+      if (width) plot.setSize({ width, height })
+    })
+    ro.observe(elRef.current)
     return () => {
-      window.removeEventListener('resize', onResize)
+      ro.disconnect()
       plot.destroy()
       plotRef.current = null
     }

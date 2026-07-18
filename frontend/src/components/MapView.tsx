@@ -9,6 +9,15 @@ const LIGHT = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
 const DARK = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
 const ORANGE = '#f6821f'
 
+// shift `toLon` by whole turns so it's within 180° of `fromLon` — makes the arc
+// take the short way around the globe (SJC→HKG across the Pacific, not Europe).
+function unwrapLon(fromLon: number, toLon: number): number {
+  let d = toLon - fromLon
+  while (d > 180) { toLon -= 360; d = toLon - fromLon }
+  while (d < -180) { toLon += 360; d = toLon - fromLon }
+  return toLon
+}
+
 // a gently bowed line between two [lng,lat] points, for a nice arc
 function arcLine(a: [number, number], b: [number, number], n = 64): [number, number][] {
   const dist = Math.hypot(b[0] - a[0], b[1] - a[1])
@@ -44,6 +53,9 @@ export function MapView({
     const hasClient = clientLat != null && clientLon != null
     const node: [number, number] = [lon, lat]
     const client: [number, number] = [clientLon ?? lon, clientLat ?? lat]
+    // node longitude unwrapped relative to the client, so the arc + framing take
+    // the short (trans-Pacific) path instead of wrapping across Europe.
+    const nodeArc: [number, number] = [unwrapLon(client[0], lon), lat]
 
     const map = new maplibregl.Map({
       container: elRef.current,
@@ -53,6 +65,13 @@ export function MapView({
       attributionControl: { compact: true },
     })
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
+
+    // collapse the attribution to just the ⓘ toggle by default (click still expands)
+    map.on('load', () => {
+      map.getContainer()
+        .querySelector('.maplibregl-ctrl-attrib')
+        ?.classList.remove('maplibregl-compact-show')
+    })
 
     // node marker (red pin)
     new maplibregl.Marker({ color: '#ef4444' }).setLngLat(node)
@@ -66,7 +85,7 @@ export function MapView({
       map.on('load', () => {
         map.addSource('arc', {
           type: 'geojson',
-          data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: arcLine(client, node) } },
+          data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: arcLine(client, nodeArc) } },
         })
         map.addLayer({
           id: 'arc', type: 'line', source: 'arc',
@@ -74,8 +93,8 @@ export function MapView({
         })
       })
 
-      // frame both points
-      const b = new maplibregl.LngLatBounds().extend(node).extend(client)
+      // frame both points using the unwrapped node so the view centers on the Pacific
+      const b = new maplibregl.LngLatBounds().extend(nodeArc).extend(client)
       map.fitBounds(b, { padding: 60, maxZoom: 6, duration: 0 })
     }
 

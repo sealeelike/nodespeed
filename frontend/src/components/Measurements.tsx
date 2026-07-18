@@ -66,7 +66,7 @@ export function LatencySection({ snap }: { snap: LiveSnapshot }) {
       <Section title="Packet Loss Measurements">
         <div className="py-3 text-sm text-gray-500 dark:text-gray-400">
           <div className="bg-amber-50 px-3 py-2 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
-            v1 未测丢包(需节点侧 TURN/coturn)。此指标暂计为不可用。
+            Not measured in v1 (requires TURN/coturn on the node). Reported as unavailable.
           </div>
         </div>
       </Section>

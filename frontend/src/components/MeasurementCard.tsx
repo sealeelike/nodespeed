@@ -83,11 +83,11 @@ function Stat({ label, v }: { label: string; v: string }) {
 export function BoxPlotLegend() {
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-400">
-      <span>粗条 = 25–75 百分位</span>
-      <span>实线 = 中位数</span>
-      <span>虚线 = 平均值</span>
-      <span>须 = min/max</span>
-      <span>散点 = 每次测量</span>
+      <span>box = 25th–75th percentile</span>
+      <span>solid line = median</span>
+      <span>dashed line = mean</span>
+      <span>whiskers = min/max</span>
+      <span>dots = each sample</span>
     </div>
   )
 }

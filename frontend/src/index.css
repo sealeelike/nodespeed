@@ -1,7 +1,17 @@
 @import "tailwindcss";
 
+/* self-hosted fonts (bundled into dist — no Google Fonts dependency) */
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
 /* class-based dark mode: toggling `.dark` on <html> flips the dark: variant */
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* make `font-sans` / `font-mono` utilities resolve to Geist */
+@theme {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+}
 
 html, body, #root {
   height: 100%;
@@ -10,7 +20,9 @@ body {
   margin: 0;
   background: #fff;
   color: #111;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 .dark body {
   background: #0b0d10;
