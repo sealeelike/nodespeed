@@ -86,5 +86,5 @@ export function MapView({
     }
   }, [lat, lon, label, clientLat, clientLon, dark])
 
-  return <div ref={elRef} className="h-64 w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800" />
+  return <div ref={elRef} className="h-64 w-full overflow-hidden" />
 }

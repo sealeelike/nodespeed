@@ -13,7 +13,7 @@ function Row({ label, value }: { label: string; value: string }) {
 // we're testing; client side = what the node observed about us (via /__meta).
 export function ConnectionInfo({ node, meta }: { node: PublicNode; meta: NodeMeta | null }) {
   return (
-    <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+    <div className="bg-gray-50 p-4 dark:bg-white/5">
       <Row label="Server location" value={`${node.name} · ${node.region}`} />
       <Row label="Your IP address" value={meta?.ip ?? '…'} />
       <Row
