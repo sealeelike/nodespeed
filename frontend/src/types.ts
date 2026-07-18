@@ -18,6 +18,10 @@ export interface NodeMeta {
   ip: string
   asn?: number
   org?: string
+  lat?: number
+  lon?: number
+  city?: string
+  country?: string
 }
 
 export type ConnStatus = 'checking' | 'online' | 'unreachable' | 'authfail'

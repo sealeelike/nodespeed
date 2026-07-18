@@ -123,7 +123,8 @@ export default function App() {
 
           {/* Server Location: map + connection info */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <MapView lat={selected.lat} lon={selected.lon} label={selected.name} dark={dark} />
+            <MapView lat={selected.lat} lon={selected.lon} label={selected.name}
+              clientLat={meta?.lat} clientLon={meta?.lon} dark={dark} />
             <ConnectionInfo node={selected} meta={meta} />
           </div>
 
