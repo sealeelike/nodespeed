@@ -2,12 +2,13 @@
 
 ## What is this
 This is a service combo that helps measure the network quality between a client and your remote VPS. It contains:
-- an interactive script that helps you quickly set up the Cloudflare speedtest kernel on your server
-- a web panel for clients, just like speed.cloudflare.com
+1. an interactive script that helps you quickly set up the Cloudflare speedtest kernel on your server
+2. a web panel for clients, just like speed.cloudflare.com
 
-Compared with librespeed, this project leverages the Cloudflare speedtest kernel and provides more comprehensive speedtest metrics.
-Compared with [als](https://github.com/wikihost-opensource/als), this project does not require clients to run any commands like iperf3 or mtr, while remaining just as professional.
-Compared with the [official Cloudflare speedtest](https://speed.cloudflare.com), this project does not measure the network quality between clients and Cloudflare nodes, but between clients and the VPS hosted by you.
+## Why this
+- Compared with [librespeed](https://github.com/librespeed), this project leverages the Cloudflare speedtest kernel and provides more comprehensive speedtest metrics.
+- Compared with [als](https://github.com/wikihost-opensource/als), this project does not require clients to run any commands like iperf3 or mtr, while remaining just as professional.
+- Compared with the [official Cloudflare speedtest](https://speed.cloudflare.com), this project does not measure the network quality between clients and Cloudflare nodes, but between clients and the VPS hosted by you.
 
 
 ## Requirements
