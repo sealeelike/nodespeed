@@ -1,10 +1,10 @@
 import type { PublicNode, NodeConn } from '../types'
 
 const STATUS: Record<string, { dot: string; label: string }> = {
-  checking: { dot: 'bg-gray-300 animate-pulse', label: '检测中…' },
-  online: { dot: 'bg-green-500', label: '在线' },
-  unreachable: { dot: 'bg-red-500', label: '不可达' },
-  authfail: { dot: 'bg-yellow-500', label: '鉴权失败' },
+  checking: { dot: 'bg-gray-300 animate-pulse', label: 'Checking…' },
+  online: { dot: 'bg-green-500', label: 'Online' },
+  unreachable: { dot: 'bg-red-500', label: 'Unreachable' },
+  authfail: { dot: 'bg-yellow-500', label: 'Auth failed' },
 }
 
 export function NodeList({
@@ -25,10 +25,10 @@ export function NodeList({
       <table className="w-full text-sm">
         <thead className="bg-gray-50 text-left text-gray-500 dark:bg-white/5 dark:text-gray-400">
           <tr>
-            <th className="px-3 py-2 font-medium">节点</th>
-            <th className="px-3 py-2 font-medium">地区</th>
-            <th className="px-3 py-2 font-medium">状态</th>
-            <th className="px-3 py-2 font-medium text-right">空载 RTT</th>
+            <th className="px-3 py-2 font-medium">Node</th>
+            <th className="px-3 py-2 font-medium">Region</th>
+            <th className="px-3 py-2 font-medium">Status</th>
+            <th className="px-3 py-2 font-medium text-right">Idle RTT</th>
           </tr>
         </thead>
         <tbody>

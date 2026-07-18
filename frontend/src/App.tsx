@@ -66,18 +66,30 @@ export default function App() {
   const selected = nodes.find((n) => n.id === selectedId) ?? null
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-6 py-8 lg:px-10">
       <header className="mb-6 flex items-start justify-between border-b border-gray-200 pb-4 dark:border-gray-800">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">NetQualityPanel</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">测你的浏览器到自建 VPS 节点的链路质量</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Link quality from your browser to your own VPS nodes</p>
         </div>
         <button
           onClick={toggleDark}
-          className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10"
-          title="切换深色模式"
+          className="p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-gray-100"
+          title="Toggle dark mode"
+          aria-label="Toggle dark mode"
         >
-          {dark ? '☀️' : '🌙'}
+          {dark ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          )}
         </button>
       </header>
 
@@ -86,7 +98,7 @@ export default function App() {
       )}
 
       <section className="mb-6">
-        <h2 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">节点</h2>
+        <h2 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">Nodes</h2>
         <NodeList
           nodes={nodes}
           conns={conns}
@@ -105,7 +117,7 @@ export default function App() {
             </h2>
             <div className="flex items-center gap-3 text-xs">
               {running ? (
-                <span className="text-orange-600">测量中…</span>
+                <span className="text-orange-600">Measuring…</span>
               ) : (
                 measuredAt && <span className="text-gray-400">Measured at {measuredAt}</span>
               )}
@@ -141,11 +153,11 @@ export default function App() {
       )}
 
       {!selected && nodes.length > 0 && (
-        <p className="text-sm text-gray-400">选一个在线节点开始测速。</p>
+        <p className="text-sm text-gray-400">Select an online node to start the test.</p>
       )}
 
       <footer className="mt-10 border-t border-gray-200 pt-4 text-xs text-gray-400 dark:border-gray-800">
-        NetQualityPanel · 自建链路质量面板 · 复用 @cloudflare/speedtest 引擎
+        NetQualityPanel · self-hosted link-quality panel · powered by the @cloudflare/speedtest engine
       </footer>
     </div>
   )
