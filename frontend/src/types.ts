@@ -1,0 +1,22 @@
+export interface PublicNode {
+  id: string
+  name: string
+  url: string
+  region: string
+  lat: number
+  lon: number
+}
+
+export interface TokenResp {
+  node: string
+  url: string
+  token: string
+  exp: number
+}
+
+export type ConnStatus = 'checking' | 'online' | 'unreachable' | 'authfail'
+
+export interface NodeConn {
+  status: ConnStatus
+  rttMs?: number
+}
