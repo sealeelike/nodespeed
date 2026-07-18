@@ -21,9 +21,9 @@ export function NodeList({
   disabled: boolean
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+    <div className="overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 text-left text-gray-500 dark:bg-gray-900 dark:text-gray-400">
+        <thead className="bg-gray-50 text-left text-gray-500 dark:bg-white/5 dark:text-gray-400">
           <tr>
             <th className="px-3 py-2 font-medium">节点</th>
             <th className="px-3 py-2 font-medium">地区</th>

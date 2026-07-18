@@ -45,7 +45,7 @@ export function SpeedPanel({
       {/* Your Internet Speed — 3 columns */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Download */}
-        <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="bg-gray-50 p-4 dark:bg-white/5">
           <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Download</div>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="text-4xl font-bold" style={{ color: ORANGE }}>{mbps(s?.download)}</span>
@@ -55,7 +55,7 @@ export function SpeedPanel({
         </div>
 
         {/* Upload */}
-        <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="bg-gray-50 p-4 dark:bg-white/5">
           <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Upload</div>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="text-4xl font-bold" style={{ color: PURPLE }}>{mbps(s?.upload)}</span>
@@ -65,7 +65,7 @@ export function SpeedPanel({
         </div>
 
         {/* Latency / Jitter */}
-        <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="bg-gray-50 p-4 dark:bg-white/5">
           <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Latency / Jitter</div>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">{ms(s?.latency)}</span>
@@ -80,7 +80,7 @@ export function SpeedPanel({
       </div>
 
       {/* Network Quality Score (AIM) */}
-      <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+      <div className="bg-gray-50 p-4 dark:bg-white/5">
         <div className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Network Quality Score</div>
         <div className="grid grid-cols-3 gap-4">
           {['streaming', 'gaming', 'rtc'].map((k) => {

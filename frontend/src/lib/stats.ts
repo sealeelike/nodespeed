@@ -19,6 +19,28 @@ export function percentile(sortedAsc: number[], p: number): number {
   return sortedAsc[lo] + (sortedAsc[hi] - sortedAsc[lo]) * (idx - lo)
 }
 
+// round up to a "nice" 1/2/5 × 10^n value
+export function niceCeil(v: number): number {
+  if (v <= 0) return 1
+  const mag = Math.pow(10, Math.floor(Math.log10(v)))
+  const n = v / mag
+  const step = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10
+  return step * mag
+}
+
+// a nice tick step giving ~5 divisions up to max
+export function niceStep(max: number): number {
+  return niceCeil(max / 5)
+}
+
+// tick values 0, step, 2·step … ≤ max
+export function ticksUpTo(max: number): number[] {
+  const step = niceStep(max)
+  const out: number[] = []
+  for (let v = 0; v <= max + 1e-9; v += step) out.push(Number(v.toFixed(6)))
+  return out
+}
+
 export function computeStats(values: number[]): Stats | null {
   if (!values.length) return null
   const s = [...values].sort((a, b) => a - b)
