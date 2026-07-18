@@ -1,4 +1,4 @@
-import type { PublicNode, TokenResp, NodeConn, NodeMeta } from './types'
+import type { PublicNode, TokenResp, NodeConn, ClientGeo } from './types'
 
 export async function fetchNodes(): Promise<PublicNode[]> {
   const r = await fetch('/api/nodes')
@@ -19,12 +19,50 @@ export async function fetchToken(nodeId: string): Promise<TokenResp> {
   return r.json()
 }
 
-// fetch the node's view of the client (IP + ASN/ISP) for the connection panel
-export async function fetchMeta(nodeId: string): Promise<NodeMeta> {
-  const tok = await fetchToken(nodeId)
-  const r = await fetch(`${tok.url}/__meta?token=${encodeURIComponent(tok.token)}`, { cache: 'no-store' })
-  if (!r.ok) throw new Error(`/__meta ${r.status}`)
-  return r.json()
+// The client's own IP + geolocation, for the "you are here" pin and connection
+// panel. The browser asks a free geo API about ITSELF — its public egress IP is
+// exactly "where you are", so no node/central involvement and no GeoIP DB to ship.
+// ipinfo.io first (https + CORS, no key, reliably reachable from mainland China);
+// ipwho.is as a fallback when ipinfo is rate-limited or blocked.
+export async function fetchClientGeo(): Promise<ClientGeo> {
+  try {
+    return await fromIpinfo()
+  } catch {
+    return await fromIpwhois()
+  }
+}
+
+async function fromIpinfo(): Promise<ClientGeo> {
+  const r = await fetch('https://ipinfo.io/json', { cache: 'no-store', headers: { Accept: 'application/json' } })
+  if (!r.ok) throw new Error(`ipinfo ${r.status}`)
+  const j = await r.json()
+  const [lat, lon] = String(j.loc ?? '').split(',').map(Number)
+  const m = /^AS(\d+)\s+(.*)$/.exec(j.org ?? '') // "AS15169 Google LLC" -> [_, "15169", "Google LLC"]
+  return {
+    ip: j.ip,
+    asn: m ? Number(m[1]) : undefined,
+    org: m ? m[2] : (j.org || undefined),
+    lat: Number.isFinite(lat) ? lat : undefined,
+    lon: Number.isFinite(lon) ? lon : undefined,
+    city: j.city || undefined,
+    country: j.country || undefined,
+  }
+}
+
+async function fromIpwhois(): Promise<ClientGeo> {
+  const r = await fetch('https://ipwho.is/', { cache: 'no-store' })
+  if (!r.ok) throw new Error(`ipwho.is ${r.status}`)
+  const j = await r.json()
+  if (j.success === false) throw new Error(`ipwho.is: ${j.message ?? 'lookup failed'}`)
+  return {
+    ip: j.ip,
+    asn: j.connection?.asn,
+    org: j.connection?.isp || j.connection?.org,
+    lat: j.latitude,
+    lon: j.longitude,
+    city: j.city,
+    country: j.country_code,
+  }
 }
 
 // ack handshake: get a token, hit the node's /__ack, and classify the result.

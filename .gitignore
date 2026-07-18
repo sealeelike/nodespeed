@@ -2,6 +2,7 @@
 # compiled binaries (built via CI/scripts, never committed)
 /spike/agent-spike
 /node-agent/node-agent
+/node-agent/nodespeed-agent
 /central/central
 *.exe
 *.test

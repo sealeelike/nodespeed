@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import type SpeedTest from '@cloudflare/speedtest'
-import type { PublicNode, NodeMeta } from '../types'
-import { fetchNodes, fetchToken, fetchMeta } from '../api'
+import type { PublicNode, ClientGeo } from '../types'
+import { fetchNodes, fetchToken, fetchClientGeo } from '../api'
 import { startTest, type LiveSnapshot, type FinalResult } from '../lib/speedtest'
 import { SpeedPanel, AimScore } from '../components/SpeedPanel'
 import { LatencySection, BandwidthSections, Section } from '../components/Measurements'
@@ -22,7 +22,7 @@ export function TestPage() {
   const [final, setFinal] = useState<FinalResult | null>(null)
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [meta, setMeta] = useState<NodeMeta | null>(null)
+  const [geo, setGeo] = useState<ClientGeo | null>(null)
   const [measuredAt, setMeasuredAt] = useState<string | null>(null)
   const engineRef = useRef<SpeedTest | null>(null)
   const startedFor = useRef<string | null>(null)
@@ -34,6 +34,11 @@ export function TestPage() {
     fetchNodes().then(setNodes).catch((e) => setError(String(e)))
   }, [])
 
+  // client geolocation is node-independent — resolve it once for the map pin + panel
+  useEffect(() => {
+    fetchClientGeo().then(setGeo).catch(() => setGeo(null))
+  }, [])
+
   function runTest(n: PublicNode) {
     engineRef.current?.pause()
     setLive(null)
@@ -41,7 +46,6 @@ export function TestPage() {
     setError(null)
     setMeasuredAt(null)
     setRunning(true)
-    fetchMeta(n.id).then(setMeta).catch(() => setMeta(null))
     fetchToken(n.id)
       .then((tok) => {
         engineRef.current = startTest(tok.url, tok.token, {
@@ -130,13 +134,13 @@ export function TestPage() {
                 lat={selected.lat}
                 lon={selected.lon}
                 label={selected.name || selected.id}
-                clientLat={meta?.lat}
-                clientLon={meta?.lon}
+                clientLat={geo?.lat}
+                clientLon={geo?.lon}
                 dark={dark}
                 selectedId={selected.id}
                 otherNodes={otherNodes}
               />
-              <ConnectionInfo node={selected} meta={meta} />
+              <ConnectionInfo node={selected} geo={geo} />
             </Section>
             {snap && <LatencySection snap={snap} />}
           </div>

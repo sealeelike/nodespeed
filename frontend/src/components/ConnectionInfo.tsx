@@ -1,4 +1,4 @@
-import type { PublicNode, NodeMeta } from '../types'
+import type { PublicNode, ClientGeo } from '../types'
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -10,18 +10,18 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 // CF's "Server location / Your network / Your IP" panel. Server side = the node
-// we're testing; client side = what the node observed about us (via /__meta).
-export function ConnectionInfo({ node, meta }: { node: PublicNode; meta: NodeMeta | null }) {
+// we're testing; client side = the browser's own IP/geo from a public geo API.
+export function ConnectionInfo({ node, geo }: { node: PublicNode; geo: ClientGeo | null }) {
   return (
     <div className="mt-4">
       <Row label="Server location" value={`${node.name} · ${node.region}`} />
-      <Row label="Your IP address" value={meta?.ip ?? '…'} />
+      <Row label="Your IP address" value={geo?.ip ?? '…'} />
       <Row
         label="Your network"
-        value={meta?.asn ? `AS${meta.asn}${meta.org ? ` · ${meta.org}` : ''}` : '…'}
+        value={geo?.asn ? `AS${geo.asn}${geo.org ? ` · ${geo.org}` : ''}` : (geo?.org ?? '…')}
       />
-      {meta?.city && (
-        <Row label="Your location" value={`${meta.city}${meta.country ? `, ${meta.country}` : ''}`} />
+      {geo?.city && (
+        <Row label="Your location" value={`${geo.city}${geo.country ? `, ${geo.country}` : ''}`} />
       )}
     </div>
   )
