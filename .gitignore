@@ -22,6 +22,8 @@ node_modules/
 !*.example.env
 secrets/
 *.secret
+# real node config holds per-node secrets; only the example is committed
+/central/nodes.json
 
 # ---- spike throwaway artifacts ----
 /spike/results/
