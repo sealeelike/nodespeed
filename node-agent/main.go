@@ -44,6 +44,7 @@ type config struct {
 	keyPath     string
 	allowOrigin string
 	geoipASN    string // path to a GeoIP ASN mmdb (optional)
+	geoipCity   string // path to a GeoIP City mmdb (optional)
 }
 
 func envOr(key, def string) string {
@@ -63,6 +64,7 @@ func loadConfig() config {
 	flag.StringVar(&c.keyPath, "key", os.Getenv("NQP_KEY"), "TLS key path (tls-mode=cert)")
 	flag.StringVar(&c.allowOrigin, "allow-origin", envOr("NQP_ALLOW_ORIGIN", "*"), "Access-Control-Allow-Origin value")
 	flag.StringVar(&c.geoipASN, "geoip-asn", os.Getenv("NQP_GEOIP_ASN"), "path to GeoIP ASN mmdb (optional, for /__meta ISP/AS)")
+	flag.StringVar(&c.geoipCity, "geoip-city", os.Getenv("NQP_GEOIP_CITY"), "path to GeoIP City mmdb (optional, for /__meta lat/lon/city)")
 	flag.Parse()
 	return c
 }
@@ -71,8 +73,9 @@ func loadConfig() config {
 var zeros = make([]byte, 1<<20) // 1 MiB
 
 type agent struct {
-	cfg   config
-	asnDB *maxminddb.Reader
+	cfg    config
+	asnDB  *maxminddb.Reader
+	cityDB *maxminddb.Reader
 }
 
 func (a *agent) commonHeaders(w http.ResponseWriter, start time.Time) {
@@ -178,12 +181,19 @@ func main() {
 		log.Fatal("no secret set (use -secret or env NQP_SECRET)")
 	}
 	a := &agent{cfg: cfg}
-	if db, err := openASNDB(cfg.geoipASN); err != nil {
+	if db, err := openMMDB(cfg.geoipASN); err != nil {
 		log.Printf("geoip: %v (continuing without ASN lookup)", err)
 	} else if db != nil {
 		a.asnDB = db
 		defer db.Close()
 		log.Printf("geoip ASN db loaded: %s", cfg.geoipASN)
+	}
+	if db, err := openMMDB(cfg.geoipCity); err != nil {
+		log.Printf("geoip city: %v (continuing without city lookup)", err)
+	} else if db != nil {
+		a.cityDB = db
+		defer db.Close()
+		log.Printf("geoip City db loaded: %s", cfg.geoipCity)
 	}
 	srv := &http.Server{Addr: cfg.listen, Handler: a.routes()}
 

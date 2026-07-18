@@ -20,6 +20,9 @@ export function ConnectionInfo({ node, meta }: { node: PublicNode; meta: NodeMet
         label="Your network"
         value={meta?.asn ? `AS${meta.asn}${meta.org ? ` · ${meta.org}` : ''}` : '…'}
       />
+      {meta?.city && (
+        <Row label="Your location" value={`${meta.city}${meta.country ? `, ${meta.country}` : ''}`} />
+      )}
     </div>
   )
 }

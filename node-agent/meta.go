@@ -16,6 +16,21 @@ type asnRecord struct {
 	Org    string `maxminddb:"autonomous_system_organization"`
 }
 
+// DB-IP City Lite record shape (also matches MaxMind GeoLite2-City).
+type cityRecord struct {
+	Location struct {
+		Latitude  float64 `maxminddb:"latitude"`
+		Longitude float64 `maxminddb:"longitude"`
+	} `maxminddb:"location"`
+	City struct {
+		Names map[string]string `maxminddb:"names"`
+	} `maxminddb:"city"`
+	Country struct {
+		ISOCode string            `maxminddb:"iso_code"`
+		Names   map[string]string `maxminddb:"names"`
+	} `maxminddb:"country"`
+}
+
 // clientIP returns the peer address as seen by the node. Browsers hit the node
 // directly, so RemoteAddr is the real client IP; we still honor XFF if a reverse
 // proxy is ever put in front.
@@ -46,12 +61,24 @@ func (a *agent) meta(w http.ResponseWriter, r *http.Request) {
 	}
 	ip := clientIP(r)
 	resp := map[string]any{"ip": ip}
-	if a.asnDB != nil {
-		if parsed := net.ParseIP(ip); parsed != nil {
-			var rec asnRecord
-			if err := a.asnDB.Lookup(parsed, &rec); err == nil && rec.Number != 0 {
-				resp["asn"] = rec.Number
-				resp["org"] = rec.Org
+	parsed := net.ParseIP(ip)
+	if a.asnDB != nil && parsed != nil {
+		var rec asnRecord
+		if err := a.asnDB.Lookup(parsed, &rec); err == nil && rec.Number != 0 {
+			resp["asn"] = rec.Number
+			resp["org"] = rec.Org
+		}
+	}
+	if a.cityDB != nil && parsed != nil {
+		var rec cityRecord
+		if err := a.cityDB.Lookup(parsed, &rec); err == nil && (rec.Location.Latitude != 0 || rec.Location.Longitude != 0) {
+			resp["lat"] = rec.Location.Latitude
+			resp["lon"] = rec.Location.Longitude
+			if c := rec.City.Names["en"]; c != "" {
+				resp["city"] = c
+			}
+			if rec.Country.ISOCode != "" {
+				resp["country"] = rec.Country.ISOCode
 			}
 		}
 	}
@@ -59,7 +86,7 @@ func (a *agent) meta(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-func openASNDB(path string) (*maxminddb.Reader, error) {
+func openMMDB(path string) (*maxminddb.Reader, error) {
 	if path == "" {
 		return nil, nil
 	}
