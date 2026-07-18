@@ -31,6 +31,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/oschwald/maxminddb-golang"
 )
 
 type config struct {
@@ -41,6 +43,7 @@ type config struct {
 	certPath    string
 	keyPath     string
 	allowOrigin string
+	geoipASN    string // path to a GeoIP ASN mmdb (optional)
 }
 
 func envOr(key, def string) string {
@@ -59,6 +62,7 @@ func loadConfig() config {
 	flag.StringVar(&c.certPath, "cert", os.Getenv("NQP_CERT"), "TLS cert path (tls-mode=cert)")
 	flag.StringVar(&c.keyPath, "key", os.Getenv("NQP_KEY"), "TLS key path (tls-mode=cert)")
 	flag.StringVar(&c.allowOrigin, "allow-origin", envOr("NQP_ALLOW_ORIGIN", "*"), "Access-Control-Allow-Origin value")
+	flag.StringVar(&c.geoipASN, "geoip-asn", os.Getenv("NQP_GEOIP_ASN"), "path to GeoIP ASN mmdb (optional, for /__meta ISP/AS)")
 	flag.Parse()
 	return c
 }
@@ -67,7 +71,8 @@ func loadConfig() config {
 var zeros = make([]byte, 1<<20) // 1 MiB
 
 type agent struct {
-	cfg config
+	cfg   config
+	asnDB *maxminddb.Reader
 }
 
 func (a *agent) commonHeaders(w http.ResponseWriter, start time.Time) {
@@ -163,6 +168,7 @@ func (a *agent) routes() *http.ServeMux {
 	mux.HandleFunc("/__ack", a.ack)
 	mux.HandleFunc("/__down", a.down)
 	mux.HandleFunc("/__up", a.up)
+	mux.HandleFunc("/__meta", a.meta)
 	return mux
 }
 
@@ -172,6 +178,13 @@ func main() {
 		log.Fatal("no secret set (use -secret or env NQP_SECRET)")
 	}
 	a := &agent{cfg: cfg}
+	if db, err := openASNDB(cfg.geoipASN); err != nil {
+		log.Printf("geoip: %v (continuing without ASN lookup)", err)
+	} else if db != nil {
+		a.asnDB = db
+		defer db.Close()
+		log.Printf("geoip ASN db loaded: %s", cfg.geoipASN)
+	}
 	srv := &http.Server{Addr: cfg.listen, Handler: a.routes()}
 
 	log.Printf("node-agent %q listening on %s (tls-mode=%s)", cfg.nodeID, cfg.listen, cfg.tlsMode)

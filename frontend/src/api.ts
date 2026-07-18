@@ -1,4 +1,4 @@
-import type { PublicNode, TokenResp, NodeConn } from './types'
+import type { PublicNode, TokenResp, NodeConn, NodeMeta } from './types'
 
 export async function fetchNodes(): Promise<PublicNode[]> {
   const r = await fetch('/api/nodes')
@@ -10,6 +10,14 @@ export async function fetchNodes(): Promise<PublicNode[]> {
 export async function fetchToken(nodeId: string): Promise<TokenResp> {
   const r = await fetch(`/api/token?node=${encodeURIComponent(nodeId)}`)
   if (!r.ok) throw new Error(`/api/token ${r.status}`)
+  return r.json()
+}
+
+// fetch the node's view of the client (IP + ASN/ISP) for the connection panel
+export async function fetchMeta(nodeId: string): Promise<NodeMeta> {
+  const tok = await fetchToken(nodeId)
+  const r = await fetch(`${tok.url}/__meta?token=${encodeURIComponent(tok.token)}`, { cache: 'no-store' })
+  if (!r.ok) throw new Error(`/__meta ${r.status}`)
   return r.json()
 }
 

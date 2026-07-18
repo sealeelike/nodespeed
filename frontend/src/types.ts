@@ -14,6 +14,12 @@ export interface TokenResp {
   exp: number
 }
 
+export interface NodeMeta {
+  ip: string
+  asn?: number
+  org?: string
+}
+
 export type ConnStatus = 'checking' | 'online' | 'unreachable' | 'authfail'
 
 export interface NodeConn {

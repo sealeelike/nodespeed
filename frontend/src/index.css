@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* class-based dark mode: toggling `.dark` on <html> flips the dark: variant */
+@custom-variant dark (&:where(.dark, .dark *));
+
 html, body, #root {
   height: 100%;
 }
@@ -8,4 +11,8 @@ body {
   background: #fff;
   color: #111;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.dark body {
+  background: #0b0d10;
+  color: #e5e7eb;
 }
