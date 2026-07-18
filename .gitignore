@@ -1,0 +1,38 @@
+# ---- Go ----
+# compiled binaries (built via CI/scripts, never committed)
+/spike/agent-spike
+/node-agent/node-agent
+/central/central
+*.exe
+*.test
+*.out
+
+# ---- Node / frontend ----
+node_modules/
+/frontend/dist/
+.vite/
+*.local
+
+# ---- secrets & certs (NEVER commit) ----
+*.pem
+*.key
+*.crt
+*.cer
+*.env
+!*.example.env
+secrets/
+*.secret
+
+# ---- spike throwaway artifacts ----
+/spike/results/
+
+# ---- tooling / editor ----
+.claude/
+.DS_Store
+.idea/
+.vscode/
+
+# ---- misc ----
+*.log
+*.db
+*.gob

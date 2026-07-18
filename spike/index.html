@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetQualityPanel — Phase-0 spike</title>
+<style>
+  body { font: 14px/1.5 -apple-system, system-ui, sans-serif; margin: 24px; color: #111; }
+  #log { white-space: pre-wrap; background: #f6f6f6; border: 1px solid #ddd;
+         padding: 12px; border-radius: 8px; max-height: 60vh; overflow: auto; }
+  .k { color: #b26b00; font-weight: 600; }
+  h1 { font-size: 18px; }
+  #status { font-weight: 600; margin: 8px 0; }
+</style>
+</head>
+<body>
+<h1>NetQualityPanel — Phase-0 spike</h1>
+<div id="status">loading engine…</div>
+<div id="log"></div>
+
+<script type="module">
+// Point the engine at the node's ABSOLUTE endpoints (cross-origin; agent sends
+// CORS * and Timing-Allow-Origin *). This mirrors the real product: page served
+// from central origin, measurement endpoints on the node origin.
+const ENDPOINT_BASE = 'http://154.94.236.99:8080';
+
+const statusEl = document.getElementById('status');
+const logEl = document.getElementById('log');
+function setStatus(s){ statusEl.textContent = s; }
+function log(...a){
+  const line = a.map(x => typeof x === 'string' ? x : JSON.stringify(x, safeReplacer, 2)).join(' ');
+  logEl.textContent += line + '\n';
+  logEl.scrollTop = logEl.scrollHeight;
+  console.log(...a);
+}
+// JSON replacer that survives circular refs / big typed arrays
+const seen = new WeakSet();
+function safeReplacer(_k, v){
+  if (typeof v === 'bigint') return v.toString();
+  if (v instanceof ArrayBuffer) return '<ArrayBuffer '+v.byteLength+'>';
+  if (ArrayBuffer.isView(v)) return '<TypedArray len='+v.length+'>';
+  if (typeof v === 'object' && v !== null){
+    if (seen.has(v)) return '<circular>';
+    seen.add(v);
+  }
+  return v;
+}
+
+const report = {
+  ua: navigator.userAgent,
+  origin: location.origin,
+  startedAt: new Date().toISOString(),
+  engineVersion: null,
+  events: [],
+  errors: [],
+  onFinish: null,
+  resultsDump: null,
+  perfEntries: null,
+};
+
+async function postReport(reason){
+  report.finishedReason = reason;
+  report.finishedAt = new Date().toISOString();
+  try {
+    const body = JSON.stringify(report, safeReplacer);
+    await fetch(ENDPOINT_BASE + '/__result', { method: 'POST', headers: {'Content-Type':'application/json'}, body });
+    setStatus('DONE ('+reason+') — result POSTed to agent. You can close this tab.');
+    log('\n>>> report POSTed to /__result ('+reason+')');
+  } catch(e){
+    setStatus('finished but POST failed: ' + e.message);
+    log('POST failed', e.message);
+  }
+}
+
+// Enumerate every getX() on the results object and call the no-arg ones.
+function dumpResults(results){
+  const out = {};
+  const names = new Set();
+  let obj = results;
+  while (obj && obj !== Object.prototype){
+    Object.getOwnPropertyNames(obj).forEach(n => names.add(n));
+    obj = Object.getPrototypeOf(obj);
+  }
+  out.__allMembers = [...names].sort();
+  for (const n of names){
+    if (n === 'constructor') continue;
+    let val;
+    try { val = results[n]; } catch(e){ continue; }
+    if (typeof val === 'function' && /^get/.test(n)){
+      try { out[n] = val.call(results); }
+      catch(e){ out[n] = '<err calling: '+e.message+'>'; }
+    }
+  }
+  return out;
+}
+
+function grabPerf(){
+  try {
+    return performance.getEntriesByType('resource')
+      .filter(e => e.name.includes('/__down') || e.name.includes('/__up') || e.name.includes('/__ack'))
+      .slice(-12)
+      .map(e => ({
+        name: e.name.replace(location.origin,''),
+        duration: e.duration,
+        transferSize: e.transferSize,
+        encodedBodySize: e.encodedBodySize,
+        responseStart: e.responseStart,
+        requestStart: e.requestStart,
+        // the key thing: did the browser expose our Server-Timing?
+        serverTiming: (e.serverTiming || []).map(s => ({name:s.name, duration:s.duration, description:s.description})),
+      }));
+  } catch(e){ return '<perf err: '+e.message+'>'; }
+}
+
+let done = false;
+async function finish(reason, results){
+  if (done) return; done = true;
+  try {
+    if (results){
+      report.resultsDump = dumpResults(results);
+      try { report.summary = results.getSummary && results.getSummary(); } catch(e){}
+      try { report.scores  = results.getScores  && results.getScores();  } catch(e){}
+    }
+  } catch(e){ report.errors.push('dump: '+e.message); }
+  report.perfEntries = grabPerf();
+  await postReport(reason);
+}
+
+// ---- load engine ----
+setStatus('importing @cloudflare/speedtest from esm.sh…');
+let SpeedTest;
+try {
+  const mod = await import('https://esm.sh/@cloudflare/speedtest');
+  SpeedTest = mod.default || mod.SpeedTest || mod;
+  report.engineVersion = 'esm.sh/@cloudflare/speedtest (latest)';
+  log('engine imported. default export type =', typeof SpeedTest);
+} catch(e){
+  report.errors.push('import: '+e.message);
+  setStatus('ENGINE IMPORT FAILED: '+e.message);
+  await postReport('import-failed');
+  throw e;
+}
+
+setStatus('running speed test… (this takes ~30–60s, please wait)');
+
+let engine;
+try {
+  engine = new SpeedTest({
+    autoStart: false,
+    downloadApiUrl: ENDPOINT_BASE + '/__down',
+    uploadApiUrl: ENDPOINT_BASE + '/__up',
+  });
+} catch(e){
+  report.errors.push('construct: '+e.message);
+  await finish('construct-failed', null);
+  throw e;
+}
+
+// hook every callback we can think of
+engine.onRunningChange = (r) => { report.events.push({t:'runningChange', running:r, at:Date.now()}); log('runningChange:', r); };
+engine.onResultsChange = (ev) => {
+  report.events.push({t:'resultsChange', at:Date.now()});
+  try { const s = engine.results && engine.results.getSummary && engine.results.getSummary(); if (s) setStatus('measuring… ' + JSON.stringify(s)); } catch(_){}
+};
+engine.onError = (err) => { report.errors.push('engine: '+(err&&err.message||err)); log('onError:', err); };
+engine.onFinish = (results) => {
+  log('onFinish fired');
+  report.onFinish = 'fired';
+  finish('onFinish', results || (engine && engine.results));
+};
+
+// watchdog: dump whatever we have if nothing finishes
+setTimeout(() => { if (!done) { log('WATCHDOG 150s — dumping partial'); finish('watchdog', engine && engine.results); } }, 150000);
+
+try { engine.play(); log('engine.play() called'); }
+catch(e){ report.errors.push('play: '+e.message); await finish('play-failed', null); }
+</script>
+</body>
+</html>
