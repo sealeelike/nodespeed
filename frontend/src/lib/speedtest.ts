@@ -29,13 +29,13 @@ export interface LiveSnapshot {
   summary: MeasurementSummary
   downPoints: BandwidthPoint[]
   upPoints: BandwidthPoint[]
+  unloadedLatencyPoints: number[]
+  downLoadedLatencyPoints: number[]
+  upLoadedLatencyPoints: number[]
 }
 
 export interface FinalResult extends LiveSnapshot {
   scores: Scores
-  unloadedLatencyPoints: number[]
-  downLoadedLatencyPoints: number[]
-  upLoadedLatencyPoints: number[]
 }
 
 function snapshot(res: Results): LiveSnapshot {
@@ -43,6 +43,9 @@ function snapshot(res: Results): LiveSnapshot {
     summary: res.getSummary(),
     downPoints: res.getDownloadBandwidthPoints(),
     upPoints: res.getUploadBandwidthPoints(),
+    unloadedLatencyPoints: res.getUnloadedLatencyPoints(),
+    downLoadedLatencyPoints: res.getDownLoadedLatencyPoints(),
+    upLoadedLatencyPoints: res.getUpLoadedLatencyPoints(),
   }
 }
 
@@ -66,13 +69,7 @@ export function startTest(baseUrl: string, token: string, h: TestHandlers): Spee
   engine.onResultsChange = () => h.onProgress?.(snapshot(engine.results))
   engine.onError = (msg: string) => h.onError?.(msg)
   engine.onFinish = (res: Results) => {
-    h.onFinish?.({
-      ...snapshot(res),
-      scores: res.getScores(),
-      unloadedLatencyPoints: res.getUnloadedLatencyPoints(),
-      downLoadedLatencyPoints: res.getDownLoadedLatencyPoints(),
-      upLoadedLatencyPoints: res.getUpLoadedLatencyPoints(),
-    })
+    h.onFinish?.({ ...snapshot(res), scores: res.getScores() })
   }
   engine.play()
   return engine

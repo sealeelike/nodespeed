@@ -5,6 +5,7 @@ import { fetchNodes, fetchToken, ackNode } from './api'
 import { startTest, type LiveSnapshot, type FinalResult } from './lib/speedtest'
 import { NodeList } from './components/NodeList'
 import { SpeedPanel } from './components/SpeedPanel'
+import { Measurements } from './components/Measurements'
 
 export default function App() {
   const [nodes, setNodes] = useState<PublicNode[]>([])
@@ -86,6 +87,11 @@ export default function App() {
             {running && <span className="text-xs text-orange-600">测量中…</span>}
           </div>
           <SpeedPanel live={live} final={final} running={running} />
+          {(final ?? live) && (
+            <div className="mt-6">
+              <Measurements snap={(final ?? live)!} />
+            </div>
+          )}
         </section>
       )}
 
