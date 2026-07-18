@@ -24,7 +24,9 @@ Run this on each node (VPS) as root to install the speedtest agent:
 bash <(curl -Ls https://raw.githubusercontent.com/sealeelike/nodespeed/main/scripts/install.sh)
 ```
 
+...
 
 ## TODO
 - [ ] make the central panel available on Cloudflare Pages
 - [ ] support packet loss test
+- [ ] support single node mode. The speedtest node itself provides the web panel. best for temporary use or beginners.
