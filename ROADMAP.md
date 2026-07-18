@@ -51,8 +51,11 @@
 - Agent 与前端理论可并行（前端可先对无鉴权的阶段 0 agent 开发），但单人做顺序推更省脑子。
 
 ## 当前进度 / 下一步
-- 状态（2026-07-18）：**阶段 0 spike 已完成并通过 ✅**。在 HK 测试机 `154.94.236.99` 上跑通极简 Go agent + `@cloudflare/speedtest`，
-  验证了：引擎认自建端点、Server-Timing 被解析、AIM 三评级出得来、箱线图所需逐次原始点全都拿得到、分档可还原、丢包优雅失败。
-  结论详见 [spike/FINDINGS.md](spike/FINDINGS.md)（含实测引擎 API + 请求契约，Phase 1 直接用）。
-  额外定论：**不用 fork 源码**，传自定义 `measurements` 去掉 packetLoss 即零 CF 依赖。
-- **下一步**：进入**阶段 1**（最细端到端竖切）——给 agent 加 HMAC 令牌校验 + TLS + systemd 正式单元；写中心 Go（登录 + 节点配置 + 令牌签发 + 发静态前端）；前端只做节点列表 + 顶部三列 + AIM 三评级。
+- **阶段 0 spike 通过 ✅**(2026-07-18)：引擎契约验证,详见 [spike/FINDINGS.md](spike/FINDINGS.md)。不用 fork,去掉 packetLoss 即零 CF 依赖。
+- **阶段 1 端到端竖切 完成并验证通过 ✅**(2026-07-18)。全链路跑通:中心签令牌 → 前端 → 节点 agent(HMAC 验签)→ 测量 → 实时 UI + AIM。
+  - `node-agent/`:/__ack /__down /__up,HMAC 令牌门禁(过期/伪造 403)、TLS 多模式(cert/selfsign/http)、Server-Timing。真域名证书 8443 验证。
+  - `central/`:无登录;`GET /api/nodes`(剔 secret)、`GET /api/token?node=`(签令牌)、发静态前端。令牌算法与 agent 一致。
+  - `frontend/`:Vite+React+Tailwind;节点表+连通性(ack)、三列(下行橙/上行紫大数字+uPlot 实时曲线+加载延迟)、AIM 三评级。
+  - 分支 `feat/phase1-vertical-slice`,4 个提交。测试机上 `nqp-agent`(systemd transient)跑在 :8443。
+- **下一步**:进入**阶段 2**(前端加厚到 CF 保真度)——箱线图卡(延迟 + 分档下载/上传)+ 展开明细表 + 统计气泡、Server Location 连接信息 + MapLibre 地图、深色模式、控制条/footer。可先合 phase1 分支回 main。
+  - 收尾项(小):把 `nqp-agent` 落成正式 systemd unit 文件(现在是 transient);中心 Docker 化留到阶段 3。
