@@ -4,8 +4,8 @@ import type { PublicNode, NodeConn, NodeMeta } from './types'
 import { fetchNodes, fetchToken, fetchMeta, ackNode } from './api'
 import { startTest, type LiveSnapshot, type FinalResult } from './lib/speedtest'
 import { NodeList } from './components/NodeList'
-import { SpeedPanel } from './components/SpeedPanel'
-import { Measurements } from './components/Measurements'
+import { SpeedPanel, AimScore } from './components/SpeedPanel'
+import { LatencySection, BandwidthSections, Section } from './components/Measurements'
 import { MapView } from './components/MapView'
 import { ConnectionInfo } from './components/ConnectionInfo'
 import { useDarkMode } from './lib/theme'
@@ -119,16 +119,24 @@ export default function App() {
             </div>
           </div>
 
-          <SpeedPanel live={live} final={final} running={running} />
+          {/* Your Internet Speed — 3-column overview */}
+          <SpeedPanel live={live} final={final} />
 
-          {/* Server Location: map + connection info */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <MapView lat={selected.lat} lon={selected.lon} label={selected.name}
-              clientLat={meta?.lat} clientLon={meta?.lon} dark={dark} />
-            <ConnectionInfo node={selected} meta={meta} />
+          {/* Network Quality Score — compact inline row */}
+          <AimScore scores={final?.scores} />
+
+          {/* main 2-column: Server Location (left) | Latency + Packet Loss (right) */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <Section title="Server Location">
+              <MapView lat={selected.lat} lon={selected.lon} label={selected.name}
+                clientLat={meta?.lat} clientLon={meta?.lon} dark={dark} />
+              <ConnectionInfo node={selected} meta={meta} />
+            </Section>
+            {(final ?? live) && <LatencySection snap={(final ?? live)!} />}
           </div>
 
-          {(final ?? live) && <Measurements snap={(final ?? live)!} />}
+          {/* Download / Upload tiers */}
+          {(final ?? live) && <BandwidthSections snap={(final ?? live)!} />}
         </section>
       )}
 
