@@ -21,9 +21,9 @@ export function NodeList({
   disabled: boolean
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
+    <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 text-left text-gray-500">
+        <thead className="bg-gray-50 text-left text-gray-500 dark:bg-gray-900 dark:text-gray-400">
           <tr>
             <th className="px-3 py-2 font-medium">节点</th>
             <th className="px-3 py-2 font-medium">地区</th>
@@ -41,20 +41,20 @@ export function NodeList({
                 key={n.id}
                 onClick={() => !disabled && onSelect(n)}
                 className={
-                  'cursor-pointer border-t border-gray-100 transition-colors ' +
-                  (sel ? 'bg-orange-50' : 'hover:bg-gray-50') +
+                  'cursor-pointer border-t border-gray-100 transition-colors dark:border-gray-800 ' +
+                  (sel ? 'bg-orange-50 dark:bg-orange-950/30' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50') +
                   (disabled ? ' cursor-not-allowed opacity-60' : '')
                 }
               >
-                <td className="px-3 py-2 font-medium text-gray-900">{n.name}</td>
-                <td className="px-3 py-2 text-gray-600">{n.region}</td>
+                <td className="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">{n.name}</td>
+                <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{n.region}</td>
                 <td className="px-3 py-2">
                   <span className="inline-flex items-center gap-2">
                     <span className={'h-2 w-2 rounded-full ' + st.dot} />
                     {st.label}
                   </span>
                 </td>
-                <td className="px-3 py-2 text-right tabular-nums text-gray-600">
+                <td className="px-3 py-2 text-right tabular-nums text-gray-600 dark:text-gray-400">
                   {c.rttMs != null ? `${c.rttMs} ms` : '—'}
                 </td>
               </tr>

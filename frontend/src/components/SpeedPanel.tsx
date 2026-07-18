@@ -45,8 +45,8 @@ export function SpeedPanel({
       {/* Your Internet Speed — 3 columns */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Download */}
-        <div className="rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Download</div>
+        <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Download</div>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="text-4xl font-bold" style={{ color: ORANGE }}>{mbps(s?.download)}</span>
             <span className="text-sm text-gray-500">Mbps</span>
@@ -55,8 +55,8 @@ export function SpeedPanel({
         </div>
 
         {/* Upload */}
-        <div className="rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Upload</div>
+        <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Upload</div>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="text-4xl font-bold" style={{ color: PURPLE }}>{mbps(s?.upload)}</span>
             <span className="text-sm text-gray-500">Mbps</span>
@@ -65,13 +65,13 @@ export function SpeedPanel({
         </div>
 
         {/* Latency / Jitter */}
-        <div className="rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Latency / Jitter</div>
+        <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Latency / Jitter</div>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-4xl font-bold text-gray-800">{ms(s?.latency)}</span>
+            <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">{ms(s?.latency)}</span>
             <span className="text-sm text-gray-500">ms</span>
           </div>
-          <div className="mt-2 space-y-1 text-sm text-gray-600">
+          <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
             <div>Jitter: <span className="tabular-nums">{ms(s?.jitter)}</span> ms</div>
             <div>↓ loaded: <span className="tabular-nums">{ms(s?.downLoadedLatency)}</span> ms</div>
             <div>↑ loaded: <span className="tabular-nums">{ms(s?.upLoadedLatency)}</span> ms</div>
@@ -80,8 +80,8 @@ export function SpeedPanel({
       </div>
 
       {/* Network Quality Score (AIM) */}
-      <div className="rounded-lg border border-gray-200 p-4">
-        <div className="mb-3 text-sm font-semibold text-gray-700">Network Quality Score</div>
+      <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Network Quality Score</div>
         <div className="grid grid-cols-3 gap-4">
           {['streaming', 'gaming', 'rtc'].map((k) => {
             const sc = scores?.[k]

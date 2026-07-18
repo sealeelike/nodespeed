@@ -34,12 +34,12 @@ export function MeasurementCard({
   const max = axisMax ?? niceCeil((st?.max ?? 1) * 1.05)
 
   return (
-    <div className="border-b border-gray-100 py-2 last:border-0">
+    <div className="border-b border-gray-100 py-2 last:border-0 dark:border-gray-800">
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between text-left"
       >
-        <span className="text-sm text-gray-700">
+        <span className="text-sm text-gray-700 dark:text-gray-300">
           {title} {st && <span className="text-gray-400">({st.n})</span>}
         </span>
         <span className="text-gray-400">{open ? '▾' : '▸'}</span>
@@ -49,7 +49,7 @@ export function MeasurementCard({
 
       {open && st && (
         <div className="mt-2 space-y-3">
-          <div className="grid grid-cols-3 gap-2 rounded-md bg-gray-50 p-2 text-xs sm:grid-cols-6">
+          <div className="grid grid-cols-3 gap-2 rounded-md bg-gray-50 p-2 text-xs sm:grid-cols-6 dark:bg-gray-800/50">
             <Stat label="Min" v={format(st.min)} />
             <Stat label="Max" v={format(st.max)} />
             <Stat label="Average" v={format(st.avg)} />
@@ -61,9 +61,9 @@ export function MeasurementCard({
             <thead className="text-left text-gray-400">
               <tr>{columns.map((c) => <th key={c} className="py-1 font-medium">{c}</th>)}</tr>
             </thead>
-            <tbody className="tabular-nums text-gray-600">
+            <tbody className="tabular-nums text-gray-600 dark:text-gray-400">
               {rows.map((r, i) => (
-                <tr key={i} className="border-t border-gray-100">
+                <tr key={i} className="border-t border-gray-100 dark:border-gray-800">
                   {r.map((cell, j) => <td key={j} className="py-1">{cell}</td>)}
                 </tr>
               ))}
@@ -79,7 +79,7 @@ function Stat({ label, v }: { label: string; v: string }) {
   return (
     <div>
       <div className="text-gray-400">{label}</div>
-      <div className="font-medium text-gray-700">{v}</div>
+      <div className="font-medium text-gray-700 dark:text-gray-300">{v}</div>
     </div>
   )
 }
